@@ -1,0 +1,68 @@
+{
+  "source_description": "reproducible example pool generated inside the package",
+  "config": {
+    "n_functions": 10,
+    "dimension": 5,
+    "weight_theta": 0.5,
+    "weight_gamma": 0.5,
+    "theta_noise": 0.1,
+    "gamma_noise": 0.1,
+    "eig_floor": 1.0,
+    "jitter": 1e-10,
+    "separation_alpha": 0.5,
+    "radius_lower_fraction": 0.15,
+    "one_cluster_radius": 0.25,
+    "contraction_grid": [
+      0.95,
+      0.9,
+      0.85,
+      0.8,
+      0.75,
+      0.7,
+      0.65,
+      0.6,
+      0.55,
+      0.5,
+      0.45,
+      0.4,
+      0.35,
+      0.3,
+      0.25,
+      0.2,
+      0.15,
+      0.1,
+      0.08,
+      0.06,
+      0.04,
+      0.02
+    ],
+    "overlap_mode": "full",
+    "seed": 20260629,
+    "max_attempts_per_sample": 20000
+  },
+  "distance_scales": {
+    "s_theta": 2.708126613632756,
+    "s_gamma": 2.3986236309604396
+  },
+  "prototype_indices_by_K": {
+    "1": [
+      4
+    ],
+    "2": [
+      2,
+      8
+    ],
+    "3": [
+      2,
+      8,
+      7
+    ]
+  },
+  "datasets": [
+    "params_K1_homogeneous",
+    "params_K2_separated",
+    "params_K2_overlapping",
+    "params_K3_separated",
+    "params_K3_overlapping"
+  ]
+}
