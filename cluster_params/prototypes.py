@@ -1,5 +1,3 @@
-"""Prototype selection utilities."""
-
 from __future__ import annotations
 
 from typing import Dict, List, Sequence
@@ -32,12 +30,16 @@ def select_prototypes(
         return [int(np.argmin(D.sum(axis=1)))]
 
     i, j = np.unravel_index(np.argmax(D), D.shape)
+    
     selected = [int(i), int(j)]
+    
     if K == 2:
         return selected
 
     best_idx = None
+    
     best_score = -np.inf
+
     for m in range(len(theta_pool)):
         if m in selected:
             continue
@@ -45,16 +47,21 @@ def select_prototypes(
         if score > best_score:
             best_score = score
             best_idx = m
+    
     selected.append(int(best_idx))
+    
     return selected
 
 
 def cluster_sizes(n_functions: int, K: int) -> List[int]:
-    """Balanced cluster sizes for N=10: K=1 -> 10, K=2 -> 5/5, K=3 -> 4/3/3."""
+    # balancing cluster sizes
+    
     if K == 1:
         return [n_functions]
+    
     if K == 2:
         return [n_functions // 2, n_functions - n_functions // 2]
+    
     if K == 3:
         return [n_functions - 2 * (n_functions // 3), n_functions // 3, n_functions // 3]
-    raise ValueError("Only K=1,2,3 are supported.")
+    

@@ -31,8 +31,8 @@ def load_set1_mat(path: Path, cfg: GenerationConfig) -> Tuple[List[np.ndarray], 
     return theta_pool, gamma_pool
 
 
+# if set 1 not available, generate a random pool of parameters for testing
 def make_example_pool(cfg: GenerationConfig, n_pool: int = 12) -> Tuple[List[np.ndarray], List[np.ndarray]]:
-    """Create a reproducible candidate pool when Set1.mat is unavailable."""
     rng = np.random.default_rng(cfg.seed)
     theta_pool: List[np.ndarray] = []
     gamma_pool: List[np.ndarray] = []

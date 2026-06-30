@@ -9,7 +9,9 @@ from typing import Dict, List, Optional, Sequence, Tuple
 import numpy as np
 
 from .config import GenerationConfig
+
 from .distances import function_distance, compute_reference_scales
+
 from .io_utils import (
     config_to_dict,
     load_set1_mat,
@@ -82,6 +84,7 @@ def generate_with_radius_rule(
                 r = function_distance((theta, gamma), (theta_proto[k], gamma_proto[k]), scales, cfg)
                 upper_ok = True if radius_upper is None else r <= radius_upper + 1e-12
                 lower_ok = r >= radius_lower - 1e-12
+
                 if lower_ok and upper_ok:
                     theta_list.append(theta)
                     gamma_list.append(gamma)
@@ -92,7 +95,7 @@ def generate_with_radius_rule(
             else:
                 raise RuntimeError(
                     f"Could not sample point for cluster {k}. Try increasing radius_upper, "
-                    "decreasing noise, or lowering radius_lower_fraction."
+                    f"decreasing noise, or lowering radius_lower_fraction."
                 )
 
     return {
@@ -115,15 +118,14 @@ def contract_prototypes(
     gamma_proto: Sequence[np.ndarray],
     contraction_factor: float,
 ) -> Tuple[List[np.ndarray], List[np.ndarray]]:
-    """Move prototypes toward their common center.
-
-    Gamma contraction uses the arithmetic SPD mean. Since the SPD cone is convex,
-    Gamma_c + rho*(Gamma_k-Gamma_c) remains SPD for rho in [0,1].
-    """
+    
+    # moving closer to the center of mass
+    
     theta_c = np.mean(np.stack(theta_proto), axis=0)
     gamma_c = np.mean(np.stack(gamma_proto), axis=0)
     theta_new = [theta_c + contraction_factor * (t - theta_c) for t in theta_proto]
     gamma_new = [gamma_c + contraction_factor * (G - gamma_c) for G in gamma_proto]
+    
     return theta_new, gamma_new
 
 
@@ -134,15 +136,22 @@ def generate_separated(
     cfg: GenerationConfig,
     seed: int,
 ) -> Dict[str, object]:
-    """Generate homogeneous or separated parameter data."""
+    
+
+
     K = len(theta_proto)
+    
     if K == 1:
         R = cfg.one_cluster_radius
         scenario = "homogeneous"
+
     else:
         delta_min = minimum_prototype_distance(theta_proto, gamma_proto, scales, cfg)
+
         assert delta_min is not None
-        R = cfg.separation_alpha * delta_min / 2.0
+
+        R = cfg.separation_alpha * delta_min / 2.0 # min radius upper bound for the separated case
+        
         scenario = "separated"
 
     return generate_with_radius_rule(
@@ -259,7 +268,10 @@ def generate_all(
     make_figures: bool,
     cfg: GenerationConfig,
 ) -> List[Dict[str, object]]:
-    """Generate all five parameter datasets and write outputs."""
+   
+    # generate all datasets (5 here)
+
+
     if source_mat is not None:
         theta_pool, gamma_pool = load_set1_mat(source_mat, cfg)
         source_description = f"prototypes selected from {source_mat}"
@@ -267,15 +279,21 @@ def generate_all(
         theta_pool, gamma_pool = make_example_pool(cfg)
         source_description = "reproducible example pool generated inside the package"
 
+    # compute the ref scales for the distance normalization (used for all datasets)
+
     scales = compute_reference_scales(theta_pool, gamma_pool)
+    
+    # set up the output directories
     dataset_dir = output_dir / "datasets"
     figure_dir = output_dir / "figures"
     dataset_dir.mkdir(parents=True, exist_ok=True)
+    
     if make_figures:
         figure_dir.mkdir(parents=True, exist_ok=True)
 
     prototype_indices_by_K: Dict[int, List[int]] = {}
     prototypes_by_K: Dict[int, Tuple[List[np.ndarray], List[np.ndarray]]] = {}
+    
     for K in (1, 2, 3):
         idx = select_prototypes(theta_pool, gamma_pool, K, scales, cfg)
         prototype_indices_by_K[K] = idx
@@ -284,33 +302,45 @@ def generate_all(
 
     scenario_specs = []
 
-    # K=1 homogeneous.
+    # K = 1
+
     theta_p, gamma_p = prototypes_by_K[1]
+    
     hom = generate_separated(theta_p, gamma_p, scales, cfg, seed=cfg.seed + 1)
+    
     hom["cluster_metrics"] = cluster_quality_metrics(
         hom["theta_list"], hom["gamma_list"], hom["labels"], hom["theta_prototypes"], hom["gamma_prototypes"], scales, cfg
     )
     scenario_specs.append(("params_K1_homogeneous", 1, hom))
 
-    # K=2 and K=3 separated/overlapping.
+    # K=2 and K=3 with 2 cases each (overlapping and fully separated)
+
     for K in (2, 3):
         theta_p, gamma_p = prototypes_by_K[K]
 
         sep = generate_separated(theta_p, gamma_p, scales, cfg, seed=cfg.seed + 10 * K)
+        
         sep["cluster_metrics"] = cluster_quality_metrics(
             sep["theta_list"], sep["gamma_list"], sep["labels"], sep["theta_prototypes"], sep["gamma_prototypes"], scales, cfg
         )
         scenario_specs.append((f"params_K{K}_separated", K, sep))
 
         ov = generate_overlapping(theta_p, gamma_p, scales, cfg, seed=cfg.seed + 100 * K)
+        
         scenario_specs.append((f"params_K{K}_overlapping", K, ov))
 
     records: List[Dict[str, object]] = []
+    
     summary_rows: List[Dict[str, object]] = []
+    
     for dataset_id, K, data in scenario_specs:
+        
         metrics = data["cluster_metrics"]
+        
         record = build_record(dataset_id, K, data, metrics, prototype_indices_by_K[K], source_description, scales, cfg)
+        
         save_jsonl_record(dataset_dir / f"{dataset_id}.jsonl", record)
+        
         if make_figures:
             make_plots(record, figure_dir, cfg)
         records.append(record)

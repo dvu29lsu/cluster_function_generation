@@ -1,5 +1,5 @@
 {
-  "source_description": "reproducible example pool generated inside the package",
+  "source_description": "prototypes selected from Set1.mat",
   "config": {
     "n_functions": 10,
     "dimension": 5,
@@ -41,21 +41,21 @@
     "max_attempts_per_sample": 20000
   },
   "distance_scales": {
-    "s_theta": 2.708126613632756,
-    "s_gamma": 2.3986236309604396
+    "s_theta": 1.6521443683658181,
+    "s_gamma": 1.5759457678282505
   },
   "prototype_indices_by_K": {
     "1": [
-      4
+      9
     ],
     "2": [
       2,
-      8
+      7
     ],
     "3": [
       2,
-      8,
-      7
+      7,
+      6
     ]
   },
   "datasets": [

@@ -27,10 +27,7 @@ def compute_reference_scales(
     theta_pool: Sequence[np.ndarray],
     gamma_pool: Sequence[np.ndarray],
 ) -> Dict[str, float]:
-    """Compute fixed normalization scales for d_f.
-
-    These scales should be computed once from the reference pool and reused for
-    all separated/overlapping datasets. Do not recompute scales per dataset.
+    """compute the scale for each parameters for normalization in d_f (compute one and using for all the datasets generated)
     """
     dtheta = []
     dgamma = []
@@ -46,11 +43,15 @@ def compute_reference_scales(
 # function distance = theta distance + gamma distance
 
 def function_distance(c1: Param, c2: Param, scales: Dict[str, float], cfg: GenerationConfig) -> float:
-    """Weighted normalized distance between parameter objects."""
+    
+    # weight normalized distance for each params
+
     theta1, gamma1 = c1
     theta2, gamma2 = c2
+    
     d_theta = float(np.linalg.norm(theta1 - theta2))
     d_gamma = gamma_airm_distance(gamma1, gamma2)
+    
     return (
         cfg.weight_theta * d_theta / scales["s_theta"]
         + cfg.weight_gamma * d_gamma / scales["s_gamma"]
@@ -63,9 +64,12 @@ def pairwise_distance_matrix(
     scales: Dict[str, float],
     cfg: GenerationConfig,
 ) -> np.ndarray:
-    """Pairwise d_f matrix for a list of generated parameters."""
+    
+    # pairwise distance matrix for a list of c_i=(theta_i, Gamma_i) objects generated
+
     n = len(theta_list)
     D = np.zeros((n, n), dtype=float)
+    
     for i in range(n):
         for j in range(i + 1, n):
             D[i, j] = D[j, i] = function_distance(

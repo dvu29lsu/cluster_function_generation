@@ -14,7 +14,9 @@ def silhouette_score_from_distances(
     D: np.ndarray,
     labels: Sequence[int],
 ) -> Tuple[Optional[float], Optional[List[float]]]:
-    """Silhouette score from a precomputed distance matrix."""
+    
+    #compute the Silhouette score from a pairwise distance matrix D and the labels
+
     labels = np.asarray(labels)
     unique = sorted(set(labels.tolist()))
     if len(unique) < 2:
@@ -35,6 +37,7 @@ def silhouette_score_from_distances(
         b_i = min(b_vals)
 
         denom = max(a_i, b_i)
+
         samples.append(0.0 if denom <= 1e-15 else (b_i - a_i) / denom)
 
     return float(np.mean(samples)), [float(x) for x in samples]
@@ -49,12 +52,16 @@ def cluster_quality_metrics(
     scales: Dict[str, float],
     cfg: GenerationConfig,
 ) -> Dict[str, object]:
-    """Compute OR, pairwise OR, Silhouette, and prototype-based DB."""
+    
+    """Compute OR, pairwise OR, Silhouette, and prototype-based DB"""
+
     labels_arr = np.asarray(labels, dtype=int)
     K = len(theta_proto)
 
     radii: List[float] = []
+    
     scatter: List[float] = []
+
     for k in range(K):
         idx = np.where(labels_arr == k)[0]
         distances = [
@@ -65,7 +72,9 @@ def cluster_quality_metrics(
         scatter.append(float(np.mean(distances)))
 
     proto_dist: Dict[str, float] = {}
+    
     pairwise_or: Dict[str, float] = {}
+    
     if K >= 2:
         for k in range(K):
             for ell in range(k + 1, K):
@@ -78,6 +87,7 @@ def cluster_quality_metrics(
         overlap_ratio = None
 
     D = pairwise_distance_matrix(theta_list, gamma_list, scales, cfg)
+    
     sil, sil_samples = silhouette_score_from_distances(D, labels_arr)
 
     if K >= 2:
@@ -128,7 +138,7 @@ def is_overlap_valid(metrics: Dict[str, object], K: int, mode: str) -> bool:
         return all(v > 1.0 for v in ratios)
     if mode == "connected":
         return sum(v > 1.0 for v in ratios) >= 2
-    raise ValueError("overlap mode must be 'full' or 'connected'.")
+    raise ValueError("overlap mode must be 'full' or 'connected'")
 
 
 def validate_record(record: Dict[str, object], cfg: GenerationConfig) -> Dict[str, object]:
